@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pace to Grade Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 600px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 1em;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Print styles */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+      }
+      input, button, label, p {
+        display: none;
+      }
+      #result {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Pace to Grade Converter</h1>
+  <p>
+    Please enter your hill pace and your flat pace (GAP) in minutes and seconds (format: m:ss or m:ss.ss, e.g., 5:07 or 5:07.32) and the hill gradient will be calculated.<br>
+    The tool assumes the distance unit (miles, kilometers, etc.) is the same for both inputs.<br>
+    Positive gradient values indicate uphill and negative values indicate downhill.
+  </p>
+  
+  <label for="hillPace">Hill Pace:</label>
+  <input type="text" id="hillPace" placeholder="e.g., 5:07.32" onkeydown="if(event.key==='Enter'){ calculateGradient(); }">
+  
+  <label for="flatPace">Flat Pace (GAP):</label>
+  <input type="text" id="flatPace" placeholder="e.g., 5:07.32" onkeydown="if(event.key==='Enter'){ calculateGradient(); }">
+  
+  <button onclick="calculateGradient()">Calculate Hill Gradient(s)</button>
+  
+  <div id="result"></div>
+  
+  <script>
+    // Parse a pace string formatted as "m:ss.ss" or "m:ss" (e.g., "5:07.32" or "5:07")
+    function parsePace(paceStr) {
+      const parts = paceStr.split(':');
+      if (parts.length !== 2) {
+        return NaN;
+      }
+      const minutes = parseFloat(parts[0]);
+      const seconds = parseFloat(parts[1]);
+      if (isNaN(minutes) || isNaN(seconds)) {
+        return NaN;
+      }
+      return minutes + seconds / 60;
+    }
+    
+    // Format a pace (in decimal minutes) into "m:ss" format, rounding to the nearest second.
+    function formatPace(pace) {
+      const totalSeconds = Math.round(pace * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const secondsStr = seconds < 10 ? "0" + seconds : seconds;
+      return minutes + ":" + secondsStr;
+    }
+
+    // Hard-coded dictionary of empirical data (gradient => pace adjustment)
+    // (Ensure all keys are quoted.)
+    const data = {
+    "35.045392399364": 3.54848473644633,
+    "32.2338445590991": 3.33040621169615,
+    "27.7642044027805": 2.96459707340553,
+    "23.7992010383043": 2.61989230847783,
+    "20.3388344656706": 2.32443108139695,
+    "17.311013714616": 2.05007422767898,
+    "14.6436478148775": 1.81089132956588,
+    "12.336736766455": 1.6209519692996,
+    "10.3181895990853": 1.48025614688013,
+    "8.58800631276845": 1.36769948894455,
+    "7.00200496697799": 1.2762472043719,
+    "5.70436750224032": 1.21293408428314,
+    "4.62300294829228": 1.15665575531535,
+    "3.61372936460744": 1.11444700858951,
+    "2.8207286917122": 1.08630784410561,
+    "2.09981898908017": 1.05816867962172,
+    "1.45100025671134": 1.03002951513783,
+    "0.946363464868917": 1.01595993289588,
+    "0.513817643289698": 1.00189035065393,
+    "0.00918085144727598": 1.00189035065393,
+    "-0.495455940395139": 0.994855559532959,
+    "-0.928001761974358": 0.987820768411985,
+    "-1.43263855381678": 0.973751186170038,
+    "-2.15354825644881": 0.952646812807117,
+    "-2.80236698881764": 0.938577230565171,
+    "-3.59536766171287": 0.924507648323223,
+    "-4.46045930487131": 0.910438066081277,
+    "-5.54182385881936": 0.89636848383933,
+    "-6.98364326408342": 0.882298901597383,
+    "-8.35337169908428": 0.875264110476409,
+    "-10.2998278961908": 0.875264110476409,
+    "-12.3183750635604": 0.889333692718356,
+    "-14.6252861119829": 0.931542439444197,
+    "-17.2926520117215": 0.994855559532959,
+    "-20.320472762776": 1.09334263522659,
+    "-23.9971122461993": 1.23403845764606,
+    "-27.7458426998859": 1.38880386230747,
+    "-32.3596647967309": 1.59984759593668,
+    "-34.9549397262062": 1.70536946275128
+    };
+
+    /**
+     * Calculates hill gradient(s) using inverse interpolation on the empirical data.
+     * 
+     * Given:
+     *    Hill Pace (H) = Flat Pace (F) * a(g),
+     * we want to find g such that a(g) = H / F.
+     * 
+     * This function uses the hard-coded dictionary "data" (gradient => pace adjustment)
+     * to find all intervals where the target adjustment factor is bracketed,
+     * then applies linear interpolation to estimate g.
+     */
+    function calculateGradient() {
+    const hillPaceStr = document.getElementById('hillPace').value;
+    const flatPaceStr = document.getElementById('flatPace').value;
+    
+    const hillPace = parsePace(hillPaceStr);
+    const flatPace = parsePace(flatPaceStr);
+    
+    if (isNaN(hillPace) || hillPace <= 0) {
+        alert("Please enter a valid hill pace (format: m:ss or m:ss.ss, e.g., 5:07 or 5:07.32).");
+        return;
+    }
+    if (isNaN(flatPace) || flatPace <= 0) {
+        alert("Please enter a valid flat pace (GAP) (format: m:ss or m:ss.ss, e.g., 5:07 or 5:07.32).");
+        return;
+    }
+    
+    // The target pace adjustment factor is H / F.
+    const target = hillPace / flatPace;
+    
+    // Get all keys from data as numbers and sort them.
+    const keys = Object.keys(data).map(Number).sort((a, b) => a - b);
+    
+    let solutions = [];
+    // Loop over adjacent pairs in the sorted keys.
+    for (let i = 1; i < keys.length; i++) {
+        const x1 = keys[i - 1];
+        const x2 = keys[i];
+        const y1 = data[x1.toString()];
+        const y2 = data[x2.toString()];
+        
+        // Check if target lies between y1 and y2 (or equals one of them)
+        if ((target - y1) * (target - y2) <= 0) {
+        // Avoid division by zero if y1 and y2 are nearly equal.
+        if (Math.abs(y2 - y1) < 1e-6) {
+            solutions.push(x1);
+        } else {
+            const t = (target - y1) / (y2 - y1);
+            const g = x1 + t * (x2 - x1);
+            solutions.push(g);
+        }
+        }
+    }
+    
+    let resultText = "";
+    if (solutions.length === 0) {
+        resultText = "No solution found using interpolation.";
+    } else {
+        // Sort solutions in descending order (higher gradient first).
+        solutions.sort((a, b) => b - a);
+        resultText = "Possible Hill Gradient(s):<br>";
+        solutions.forEach((sol, idx) => {
+        resultText += "Option " + (idx + 1) + ": " + sol.toFixed(2) + "%<br>";
+        });
+    }
+    
+    document.getElementById('result').innerHTML = resultText;
+    }
+    
+    // // Calculate hill gradient(s) given hill pace (H) and flat pace (F)
+    // // The relationship is: H = a(g) * F, where a(g) = 1 + 0.029*g + 0.0015*g^2.
+    // // Rearranging, we get: 0.0015*g^2 + 0.029*g + (1 - H/F) = 0.
+    // function calculateGradient() {
+    //   const hillPaceStr = document.getElementById('hillPace').value;
+    //   const flatPaceStr = document.getElementById('flatPace').value;
+      
+    //   const hillPace = parsePace(hillPaceStr);
+    //   const flatPace = parsePace(flatPaceStr);
+      
+    //   if (isNaN(hillPace) || hillPace <= 0) {
+    //     alert("Please enter a valid hill pace in the format m:ss or m:ss.ss (e.g., 5:07 or 5:07.32).");
+    //     return;
+    //   }
+    //   if (isNaN(flatPace) || flatPace <= 0) {
+    //     alert("Please enter a valid flat pace (GAP) in the format m:ss or m:ss.ss (e.g., 5:07 or 5:07.32).");
+    //     return;
+    //   }
+      
+    //   // Compute the ratio r = H / F.
+    //   const r = hillPace / flatPace;
+      
+    //   // Our quadratic is: 0.0015*g^2 + 0.029*g + (1 - r) = 0.
+    //   const a = 0.0015;
+    //   const b = 0.029;
+    //   const c = 1 - r;
+      
+    //   // Compute the discriminant: D = b^2 - 4ac.
+    //   const D = Math.pow(b, 2) - 4 * a * c;
+      
+    //   let resultText = "";
+      
+    //   if (D < 0) {
+    //     resultText = "No real solution: the provided paces do not yield a valid hill gradient.";
+    //   } else {
+    //     // Compute the two possible solutions.
+    //     const sqrtD = Math.sqrt(D);
+    //     const g1 = (-b + sqrtD) / (2 * a);
+    //     const g2 = (-b - sqrtD) / (2 * a);
+        
+    //     // We'll consider solutions that are meaningfully distinct.
+    //     // If the two solutions are nearly identical (difference < 0.001), then show one.
+    //     if (Math.abs(g1 - g2) < 0.001) {
+    //       resultText = "Hill Gradient: " + g1.toFixed(2) + "%";
+    //     } else {
+    //       resultText = "Possible Hill Gradients: <br>" +
+    //                    "Option 1: " + g1.toFixed(2) + "%<br>" +
+    //                    "Option 2: " + g2.toFixed(2) + "%";
+    //     }
+    //   }
+      
+    //   document.getElementById('result').innerHTML = resultText;
+    // }
+
+    function getURLParameter(name) {
+  const params = new URLSearchParams(window.location.search);
+  return params.get(name);
+}
+
+window.addEventListener("load", function() {
+  const hillPaceParam = getURLParameter("hillPace");
+  const flatPaceParam = getURLParameter("flatPace");
+  
+  if (hillPaceParam) {
+    document.getElementById("hillPace").value = hillPaceParam;
+  }
+  if (flatPaceParam) {
+    document.getElementById("flatPace").value = flatPaceParam;
+  }
+  
+  // If both parameters are supplied, run the calculation automatically.
+  if (hillPaceParam && flatPaceParam) {
+    calculateGradient();
+  }
+});
+</script>
+</body>
+</html>
