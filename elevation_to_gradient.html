@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Elevation to Gradient Calculator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 600px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 1em;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Print styles */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+      }
+      input, button, label, p {
+        display: none;
+      }
+      #result {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Elevation to Gradient Calculator</h1>
+  <p>
+    Enter the elevation change (in feet) and the horizontal distance (in miles) to calculate the gradient.<br>
+    The gradient is expressed as a percentage and assumes the distance units remain consistent.
+  </p>
+  
+  <label for="elevation">Elevation Change (ft):</label>
+  <input type="number" id="elevation" placeholder="e.g., 500">
+  
+  <label for="distance">Distance (miles):</label>
+  <input type="number" id="distance" placeholder="e.g., 2">
+  
+  <button onclick="calculateGradient()">Calculate Gradient</button>
+  
+  <div id="result"></div>
+  
+  <script>
+    // Calculate gradient using: (elevation / (distance * 5280)) * 100.
+    function calculateGradient() {
+      const elevation = parseFloat(document.getElementById("elevation").value);
+      const distance = parseFloat(document.getElementById("distance").value);
+      
+      if (isNaN(elevation) || isNaN(distance) || distance <= 0) {
+        alert("Please enter valid numbers. Distance must be greater than zero.");
+        return;
+      }
+      
+      // 1 mile = 5280 feet.
+      const horizontalFeet = distance * 5280;
+      const gradient = (elevation / horizontalFeet) * 100;
+      
+      document.getElementById("result").innerHTML = "Gradient: " + gradient.toFixed(2) + "%";
+    }
+    
+    // Helper function to get URL parameters.
+    function getURLParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+    
+    // On page load, check for URL parameters "elevation" and "distance".
+    window.addEventListener("load", function() {
+      const elevationParam = getURLParameter("elevation");
+      const distanceParam = getURLParameter("distance");
+      
+      if (elevationParam) {
+        document.getElementById("elevation").value = elevationParam;
+      }
+      if (distanceParam) {
+        document.getElementById("distance").value = distanceParam;
+      }
+      
+      // If both parameters are provided, automatically calculate.
+      if (elevationParam && distanceParam) {
+        calculateGradient();
+      }
+    });
+  </script>
+</body>
+</html>
