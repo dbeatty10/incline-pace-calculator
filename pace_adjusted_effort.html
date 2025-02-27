@@ -44,14 +44,15 @@
   <h1>Pace-Adjusted Effort Calculator</h1>
   <p>
     Enter your pace at full body weight (in "m:ss" or "m:ss.ss" format) and your percent weight reduction.<br>
-    The calculator will compute your adjusted effort pace (in min/mile) and speed. For metric units, input pace in min/km.
+    The calculator will compute your adjusted effort pace (in min/mile) and speed, and also display your adjusted body weight.<br>
+    For metric units, input pace in min/km (it will be converted to min/mile internally).
   </p>
   
   <label for="pace">Full Body Pace:</label>
   <input type="text" id="pace" placeholder="e.g., 5:07.32" onkeydown="if(event.key==='Enter'){ calculateAdjustedPace(); }">
   
   <label for="percentReduction">Percent Weight Reduction (%):</label>
-  <input type="number" id="percentReduction" placeholder="e.g., 8.3" step="0.1" onkeydown="if(event.key==='Enter'){ calculateAdjustedPace(); }">
+  <input type="number" id="percentReduction" placeholder="e.g., 15" step="0.1" onkeydown="if(event.key==='Enter'){ calculateAdjustedPace(); }">
   
   <select id="unit" onchange="updateUnits()">
       <option value="imperial" selected>Imperial</option>
@@ -63,6 +64,9 @@
   <div id="result"></div>
   
   <script>
+    // Assume a default full body weight (in lbs) for pace_adjusted_effort.
+    const defaultBW = 100; // lbs
+
     // Format a pace (in decimal minutes) into "m:ss" format (rounded to the nearest second).
     function formatPace(pace) {
       const totalSeconds = Math.round(pace * 60);
@@ -72,7 +76,7 @@
     }
     
     function updateUnits() {
-      // For now, simply trigger a recalculation.
+      // Simply trigger a recalculation when the unit selection changes.
       calculateAdjustedPace();
     }
     
@@ -99,7 +103,7 @@
       
       // For metric: Convert pace from min/km to min/mile.
       if (unit === 'metric') {
-        pace = pace * 1.60934; // Convert pace from min/km to min/mile.
+        pace = pace * 1.60934; // 1 min/km * 1.60934 = min/mile
       }
       
       // Compute C = 0.2 - 0.00309 * (percentReduction)^2 + 0.31 * percentReduction.
@@ -111,21 +115,28 @@
       const adjustedPace = (273 * pace) / (273 + C * pace);
       const adjustedPaceMinPerKm = adjustedPace / 1.60934;
       
-      // Compute original speed from full body pace (speed in MPH = 60 / pace).
+      // Compute original speed from full body pace.
       const originalSpeedMPH = 60 / pace;
       const originalSpeedKPH = originalSpeedMPH * 1.60934;
       
-      // Compute adjusted speed (MPH = 60 / adjustedPace).
+      // Compute adjusted speed.
       const adjustedSpeedMPH = 60 / adjustedPace;
       const adjustedSpeedKPH = adjustedSpeedMPH * 1.60934;
       
-      // Also compute original pace in min/km for completeness.
+      // Compute the adjusted body weight based on the percent reduction.
+      // Here we assume defaultBW is the full body weight.
+      const adjustedBW = defaultBW * (1 - percentReduction / 100);
+      const adjustedBW_kg = adjustedBW * 0.453592;
+      
+      // Also compute original pace in min/km.
       const originalPaceMinPerKm = pace / 1.60934;
       
       let resultText = "";
       resultText += "Original Speed: " + originalSpeedMPH.toFixed(1) + " MPH (" + originalSpeedKPH.toFixed(1) + " KPH)<br>";
       resultText += "Original Pace: " + formatPace(pace) + " min/mile (" + formatPace(originalPaceMinPerKm) + " min/km)<br>";
+      resultText += "Assumed Full Body Weight: " + defaultBW.toFixed(1) + " lbs (" + (defaultBW * 0.453592).toFixed(1) + " kg)<br>";
       resultText += "Body Weight Reduction: " + percentReduction.toFixed(1) + " %<br>";
+      resultText += "Adjusted Body Weight: " + adjustedBW.toFixed(1) + " lbs (" + adjustedBW_kg.toFixed(1) + " kg)<br>";
       resultText += "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>";
       resultText += "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" + formatPace(adjustedPaceMinPerKm) + " min/km)";
       
