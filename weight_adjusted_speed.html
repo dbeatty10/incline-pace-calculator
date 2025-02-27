@@ -43,7 +43,7 @@
 <body>
   <h1>Weight-Adjusted Speed Calculator</h1>
   <p>
-    Enter your speed at full body weight along with your full body weight and the weight reduction 
+    Enter your speed at full body weight along with your full body weight and the amount of weight reduction 
     (or target weight difference). The calculator will convert your full body weight speed into an equivalent 
     effort speed and pace at the lower body weight.<br>
     The tool supports both imperial and metric units.
@@ -77,10 +77,10 @@
     }
     
     function updateUnits() {
-      // For now, simply trigger a recalculation.
+      // Trigger recalculation if units change.
       calculateAdjustedSpeed();
     }
-
+    
     function calculateAdjustedSpeed() {
       var speed = parseFloat(document.getElementById('speed').value);
       var BW = parseFloat(document.getElementById('BW').value);
@@ -93,9 +93,8 @@
         return;
       }
       
-      // Initialize variables for both systems.
       var speedMPH, speedKPH;
-      
+      // For metric: convert KPH to MPH and kg to lbs.
       if (unit === 'metric') {
         speedKPH = speed;
         speed = speed / 1.60934; // Convert KPH to MPH.
@@ -110,51 +109,43 @@
       // Compute percent reduction.
       var percentReduction = (WeightOff / BW) * 100;
       
-      // Compute adjustedSpeedMPH using the given formula.
+      // Compute adjusted speed using the given formula (in MPH).
       var adjustedSpeedMPH = ((4.55 * speed + 0.2 - 0.00309 * Math.pow(percentReduction, 2) + 0.31 * percentReduction)) / 4.55;
       
-      // Convert the adjusted speed (MPH) into pace (min/mile).
-      var paceInMinPerMile = 60 / adjustedSpeedMPH;
-      var minutes = Math.floor(paceInMinPerMile);
-      var seconds = Math.round((paceInMinPerMile - minutes) * 60);
-      if (seconds >= 60) { minutes++; seconds = 0; }
+      // Compute original speed (already in speedMPH and speedKPH).
       
-      // Convert adjusted speed back to KPH.
+      // Convert adjusted speed to KPH.
       var adjustedSpeedKPH = adjustedSpeedMPH * 1.60934;
       
-      // Calculate pace in min/km.
+      // Compute adjusted pace from adjusted speed.
+      var paceInMinPerMile = 60 / adjustedSpeedMPH;
       var paceInMinPerKm = 60 / adjustedSpeedKPH;
-      var minutesKm = Math.floor(paceInMinPerKm);
-      var secondsKm = Math.round((paceInMinPerKm - minutesKm) * 60);
-      if (secondsKm >= 60) { minutesKm++; secondsKm = 0; }
       
-      // Calculate original pace in min/mile andmin/km.
-      var opaceInMinPerMile = 60 / speedMPH;
-      var opaceInMinPerKm = 60 / speedKPH;
+      // Compute adjusted body weight.
+      var adjustedBW = BW - WeightOff; // BW and WeightOff are in lbs.
+      var adjustedBW_kg = adjustedBW * 0.453592;
       
-      // Build the result text with both systems, including the body weight reduction.
-      var resultText = 
-        "Speed: " + speedMPH.toFixed(1) + " MPH (" + speedKPH.toFixed(1) + " KPH)<br>" +
-        "Original Pace: " + formatPace(opaceInMinPerMile) + " min/mile (" +
-                          formatPace(opaceInMinPerKm) + " min/km)<br>" +
-        "Body weight reduction: " + percentReduction.toFixed(1) + " %<br>" +
-        "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>" +
-        "Adjusted Pace: " + formatPace(paceInMinPerMile) + " min/mile (" +
-                          formatPace(paceInMinPerKm) + " min/km)";
+      // Build verbose result text.
+      var resultText = "";
+      resultText += "Original Speed: " + speedMPH.toFixed(1) + " MPH (" + speedKPH.toFixed(1) + " KPH)<br>";
+      resultText += "Adjusted Body Weight: " + adjustedBW.toFixed(1) + " lbs (" + adjustedBW_kg.toFixed(1) + " kg)<br>";
+      resultText += "Body Weight Reduction: " + percentReduction.toFixed(1) + " %<br>";
+      resultText += "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>";
+      resultText += "Adjusted Pace: " + formatPace(paceInMinPerMile) + " min/mile (" + formatPace(paceInMinPerKm) + " min/km)";
       
       resultDiv.innerHTML = resultText;
     }
     
     // Attach click handler to calculate button.
     document.getElementById('calculateButton').addEventListener('click', function(event) {
-      event.preventDefault(); // Prevent form submission (if in a form)
+      event.preventDefault();
       calculateAdjustedSpeed();
     });
     
     // Initialize default values and perform an initial calculation.
-    document.getElementById('speed').value = 6.2;  // Example speed at full body weight
-    document.getElementById('BW').value = 100;       // Example full body weight in lbs
-    document.getElementById('WeightOff').value = 15; // Example weight reduction in lbs
+    document.getElementById('speed').value = 6.2;   // Example speed at full body weight
+    document.getElementById('BW').value = 100;        // Example full body weight in lbs
+    document.getElementById('WeightOff').value = 15;  // Example weight reduction in lbs
     updateUnits();
   </script>
 </body>
