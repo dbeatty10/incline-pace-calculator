@@ -64,8 +64,16 @@
   <div id="result"></div>
   
   <script>
+    // Format a pace (in decimal minutes) into "m:ss" format (rounded to the nearest second).
+    function formatPace(pace) {
+      const totalSeconds = Math.round(pace * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+    
     function updateUnits() {
-      // For now, simply recalculate if unit changes.
+      // For now, simply trigger a recalculation.
       calculateAdjustedPace();
     }
     
@@ -77,14 +85,6 @@
       const seconds = parseFloat(parts[1]);
       if (isNaN(minutes) || isNaN(seconds)) return NaN;
       return minutes + seconds / 60;
-    }
-    
-    // Format a pace (in decimal minutes) into "m:ss" format (rounded to the nearest second).
-    function formatPace(pace) {
-      const totalSeconds = Math.round(pace * 60);
-      const minutes = Math.floor(totalSeconds / 60);
-      const seconds = totalSeconds % 60;
-      return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
     }
     
     // Calculate the adjusted pace using the pace-based formula.
@@ -100,7 +100,7 @@
       
       // For metric: Convert pace from min/km to min/mile.
       if (unit === 'metric') {
-        pace = pace * 1.60934; // 1 km pace * 1.60934 = min/mile
+        pace = pace * 1.60934; // Convert pace from min/km to min/mile.
       }
       
       // Compute C = 0.2 - 0.00309 * (percentReduction)^2 + 0.31 * percentReduction.
@@ -109,14 +109,18 @@
       // Use the pace-based formula:
       // Adjusted Pace (min/mile) = (273 * pace) / (273 + C * pace)
       // where 273 = 4.55 * 60.
-      var adjustedPace = (273 * pace) / (273 + C * pace);
+      const adjustedPace = (273 * pace) / (273 + C * pace);
       const adjustedPaceMinPerKm = adjustedPace / 1.60934;
-
+      
+      // Build verbose output.
+      // Original pace is the input pace in min/mile.
+      const originalPaceMinPerKm = pace / 1.60934;
+      
       let resultText = "";
-
-      resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" +
-        formatPace(adjustedPaceMinPerKm) + " min/km)"; 
-
+      resultText += "Original Pace: " + formatPace(pace) + " min/mile (" + formatPace(originalPaceMinPerKm) + " min/km)<br>";
+      resultText += "Body Weight Reduction: " + percentReduction.toFixed(1) + " %<br>";
+      resultText += "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" + formatPace(adjustedPaceMinPerKm) + " min/km)";
+      
       document.getElementById('result').innerHTML = resultText;
     }
     
