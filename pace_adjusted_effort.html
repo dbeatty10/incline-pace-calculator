@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Pace-Adjusted Effort Calculator (Pace-Based)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      max-width: 600px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, select, button {
+      padding: 8px;
+      font-size: 1em;
+      margin-bottom: 10px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    /* Print styles */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+      }
+      input, select, button, label, p {
+        display: none;
+      }
+      #result {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>Pace-Adjusted Effort Calculator</h1>
+  <p>
+    Enter your pace at full body weight (in "m:ss" or "m:ss.ss" format) and your percent weight reduction.<br>
+    The calculator will compute your adjusted effort pace (in min/mile).<br>
+    For metric units, input pace in min/km and weights in kg (pace will be converted to min/mile internally).
+  </p>
+  
+  <label for="pace">Full Body Pace:</label>
+  <input type="text" id="pace" placeholder="e.g., 5:07.32" onkeydown="if(event.key==='Enter'){ calculateAdjustedPace(); }">
+  
+  <label for="percentReduction">Percent Weight Reduction (%):</label>
+  <input type="number" id="percentReduction" placeholder="e.g., 8.3" step="0.1" onkeydown="if(event.key==='Enter'){ calculateAdjustedPace(); }">
+  
+  <select id="unit" onchange="updateUnits()">
+      <option value="imperial" selected>Imperial</option>
+      <option value="metric">Metric</option>
+  </select>
+  
+  <button id="calculateButton">Calculate Adjusted Pace</button>
+  
+  <div id="result"></div>
+  
+  <script>
+    function updateUnits() {
+      // For now, simply recalculate if unit changes.
+      calculateAdjustedPace();
+    }
+    
+    // Parse a pace string in the format "m:ss" or "m:ss.ss" into decimal minutes.
+    function parsePace(paceStr) {
+      const parts = paceStr.split(':');
+      if (parts.length !== 2) return NaN;
+      const minutes = parseFloat(parts[0]);
+      const seconds = parseFloat(parts[1]);
+      if (isNaN(minutes) || isNaN(seconds)) return NaN;
+      return minutes + seconds / 60;
+    }
+    
+    // Format a pace (in decimal minutes) into "m:ss" format (rounded to the nearest second).
+    function formatPace(pace) {
+      const totalSeconds = Math.round(pace * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      return minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+    }
+    
+    // Calculate the adjusted pace using the pace-based formula.
+    function calculateAdjustedPace() {
+      let pace = parsePace(document.getElementById('pace').value);
+      let percentReduction = parseFloat(document.getElementById('percentReduction').value);
+      const unit = document.getElementById('unit').value;
+      
+      if (isNaN(pace) || pace <= 0 || isNaN(percentReduction)) {
+        alert("Please enter valid values for pace and percent weight reduction.");
+        return;
+      }
+      
+      // For metric: Convert pace from min/km to min/mile.
+      if (unit === 'metric') {
+        pace = pace * 1.60934; // 1 km pace * 1.60934 = min/mile
+      }
+      
+      // Compute C = 0.2 - 0.00309 * (percentReduction)^2 + 0.31 * percentReduction.
+      const C = 0.2 - 0.00309 * Math.pow(percentReduction, 2) + 0.31 * percentReduction;
+      
+      // Use the pace-based formula:
+      // Adjusted Pace (min/mile) = (273 * pace) / (273 + C * pace)
+      // where 273 = 4.55 * 60.
+      var adjustedPace = (273 * pace) / (273 + C * pace);
+      const adjustedPaceMinPerKm = adjustedPace / 1.60934;
+
+      let resultText = "";
+    //   if (unit === 'metric') {
+    //     // Convert adjusted pace from min/mile to min/km.
+    //     const adjustedPaceMinPerKm = adjustedPace / 1.60934;
+    //     resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile<br>" +
+    //                  "or " + formatPace(adjustedPaceMinPerKm) + " min/km";
+    //   } else {
+    //     resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile";
+    //   }
+
+    //   resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile";
+
+      resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" +
+        formatPace(adjustedPaceMinPerKm) + " min/km)"; 
+
+      // Build the result text with both Imperial and Metric results.
+    //   resultText = "Speed: " + speedMPH.toFixed(1) + " MPH (" + speedKPH.toFixed(1) + " KPH)<br>";
+    //    +
+    //             "Pace: " + ominutes + ":" + (oseconds < 10 ? "0" : "") + oseconds + " min/mile (" +
+    //               ominutesKm + ":" + (osecondsKm < 10 ? "0" : "") + osecondsKm + " min/km)<br>" +
+    //             "Body weight reduction: " + percentReduction.toFixed(1) + " %<br>" +
+    //             "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>" +
+    //             "Adjusted Pace: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + " min/mile (" +
+    //               minutesKm + ":" + (secondsKm < 10 ? "0" : "") + secondsKm + " min/km)";
+
+      document.getElementById('result').innerHTML = resultText;
+    }
+    
+    // Attach click handler to the calculate button.
+    document.getElementById('calculateButton').addEventListener('click', function(event) {
+      event.preventDefault(); // Prevent form submission
+      calculateAdjustedPace();
+    });
+    
+    // Initialize default values and perform an initial calculation.
+    document.getElementById('pace').value = "9:41"; // Example full body pace
+    document.getElementById('percentReduction').value = 15; // Example percent reduction
+    updateUnits();
+  </script>
+</body>
+</html>
