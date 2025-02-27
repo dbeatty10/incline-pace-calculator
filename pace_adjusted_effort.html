@@ -113,29 +113,9 @@
       const adjustedPaceMinPerKm = adjustedPace / 1.60934;
 
       let resultText = "";
-    //   if (unit === 'metric') {
-    //     // Convert adjusted pace from min/mile to min/km.
-    //     const adjustedPaceMinPerKm = adjustedPace / 1.60934;
-    //     resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile<br>" +
-    //                  "or " + formatPace(adjustedPaceMinPerKm) + " min/km";
-    //   } else {
-    //     resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile";
-    //   }
-
-    //   resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile";
 
       resultText = "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" +
         formatPace(adjustedPaceMinPerKm) + " min/km)"; 
-
-      // Build the result text with both Imperial and Metric results.
-    //   resultText = "Speed: " + speedMPH.toFixed(1) + " MPH (" + speedKPH.toFixed(1) + " KPH)<br>";
-    //    +
-    //             "Pace: " + ominutes + ":" + (oseconds < 10 ? "0" : "") + oseconds + " min/mile (" +
-    //               ominutesKm + ":" + (osecondsKm < 10 ? "0" : "") + osecondsKm + " min/km)<br>" +
-    //             "Body weight reduction: " + percentReduction.toFixed(1) + " %<br>" +
-    //             "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>" +
-    //             "Adjusted Pace: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + " min/mile (" +
-    //               minutesKm + ":" + (secondsKm < 10 ? "0" : "") + secondsKm + " min/km)";
 
       document.getElementById('result').innerHTML = resultText;
     }
