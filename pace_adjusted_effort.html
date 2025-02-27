@@ -44,8 +44,7 @@
   <h1>Pace-Adjusted Effort Calculator</h1>
   <p>
     Enter your pace at full body weight (in "m:ss" or "m:ss.ss" format) and your percent weight reduction.<br>
-    The calculator will compute your adjusted effort pace (in min/mile).<br>
-    For metric units, input pace in min/km and weights in kg (pace will be converted to min/mile internally).
+    The calculator will compute your adjusted effort pace (in min/mile) and speed. For metric units, input pace in min/km.
   </p>
   
   <label for="pace">Full Body Pace:</label>
@@ -112,13 +111,22 @@
       const adjustedPace = (273 * pace) / (273 + C * pace);
       const adjustedPaceMinPerKm = adjustedPace / 1.60934;
       
-      // Build verbose output.
-      // Original pace is the input pace in min/mile.
+      // Compute original speed from full body pace (speed in MPH = 60 / pace).
+      const originalSpeedMPH = 60 / pace;
+      const originalSpeedKPH = originalSpeedMPH * 1.60934;
+      
+      // Compute adjusted speed (MPH = 60 / adjustedPace).
+      const adjustedSpeedMPH = 60 / adjustedPace;
+      const adjustedSpeedKPH = adjustedSpeedMPH * 1.60934;
+      
+      // Also compute original pace in min/km for completeness.
       const originalPaceMinPerKm = pace / 1.60934;
       
       let resultText = "";
+      resultText += "Original Speed: " + originalSpeedMPH.toFixed(1) + " MPH (" + originalSpeedKPH.toFixed(1) + " KPH)<br>";
       resultText += "Original Pace: " + formatPace(pace) + " min/mile (" + formatPace(originalPaceMinPerKm) + " min/km)<br>";
       resultText += "Body Weight Reduction: " + percentReduction.toFixed(1) + " %<br>";
+      resultText += "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>";
       resultText += "Adjusted Pace: " + formatPace(adjustedPace) + " min/mile (" + formatPace(adjustedPaceMinPerKm) + " min/km)";
       
       document.getElementById('result').innerHTML = resultText;
