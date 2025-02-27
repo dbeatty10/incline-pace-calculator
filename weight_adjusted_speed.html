@@ -104,7 +104,6 @@
       // The provided formula adjusts pace based on weight reduction.
       // Here, speed is the full body weight speed (in MPH).
       // The formula used:
-      // adjustedSpeedMPH = ((4.55 * speed + 0.2 + (-0.00309 * ((WeightOff/BW)*100)^2) + 0.31 * ((WeightOff/BW)*100)))/4.55;
       var percentReduction = (WeightOff / BW) * 100;
       var adjustedSpeedMPH = ((4.55 * speed + 0.2 - 0.00309 * Math.pow(percentReduction, 2) + 0.31 * percentReduction)) / 4.55;
       
@@ -113,22 +112,6 @@
       var minutes = Math.floor(paceInMinPerMile);
       var seconds = Math.round((paceInMinPerMile - minutes) * 60);
       if (seconds >= 60) { minutes++; seconds = 0; }
-      
-    //   var resultText = "";
-    //   if (unit === 'metric') {
-    //     // Convert adjusted speed back to KPH.
-    //     var adjustedSpeedKPH = adjustedSpeedMPH * 1.60934;
-    //     // Calculate pace in min/km.
-    //     var paceInMinPerKm = 60 / adjustedSpeedKPH;
-    //     var minutesKm = Math.floor(paceInMinPerKm);
-    //     var secondsKm = Math.round((paceInMinPerKm - minutesKm) * 60);
-    //     if (secondsKm >= 60) { minutesKm++; secondsKm = 0; }
-    //     resultText = "Adjusted Speed: " + adjustedSpeedKPH.toFixed(1) + " KPH<br>" +
-    //                  "Pace: " + minutesKm + ":" + (secondsKm < 10 ? "0" : "") + secondsKm + " min/km";
-    //   } else {
-    //     resultText = "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH<br>" +
-    //                  "Pace: " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds + " min/mile";
-    //   }
 
       // Convert adjusted speed back to KPH.
       var adjustedSpeedKPH = adjustedSpeedMPH * 1.60934;
