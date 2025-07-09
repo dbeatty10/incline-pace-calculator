@@ -49,19 +49,20 @@
     The tool supports both imperial and metric units.
   </p>
   
-  <label for="speed">Speed at Full Body Weight:</label>
-  <input type="number" id="speed" placeholder="e.g., 6.5" step="0.1">
-  
-  <label for="BW">Full Body Weight:</label>
-  <input type="number" id="BW" placeholder="e.g., 180" step="0.1">
-  
-  <label for="WeightOff">Weight Reduction:</label>
-  <input type="number" id="WeightOff" placeholder="e.g., 15" step="0.1">
-  
+  <label for="unit">Unit System:</label>
   <select id="unit" onchange="updateUnits()">
       <option value="imperial" selected>Imperial</option>
       <option value="metric">Metric</option>
   </select>
+  
+  <label for="BW" id="BWLabel">Full Body Weight (lbs):</label>
+  <input type="number" id="BW" placeholder="e.g., 180" step="0.1">
+  
+  <label for="WeightOff" id="WeightOffLabel">Weight Reduction (lbs):</label>
+  <input type="number" id="WeightOff" placeholder="e.g., 15" step="0.1">
+  
+  <label for="speed" id="speedLabel">Speed at Full Body Weight (MPH):</label>
+  <input type="number" id="speed" placeholder="e.g., 6.5" step="0.1">
   
   <button id="calculateButton">Calculate Adjusted Speed</button>
   
@@ -77,6 +78,30 @@
     }
     
     function updateUnits() {
+      var unit = document.getElementById('unit').value;
+      var speedLabel = document.getElementById('speedLabel');
+      var BWLabel = document.getElementById('BWLabel');
+      var WeightOffLabel = document.getElementById('WeightOffLabel');
+      var speedInput = document.getElementById('speed');
+      var BWInput = document.getElementById('BW');
+      var WeightOffInput = document.getElementById('WeightOff');
+      
+      if (unit === 'metric') {
+        speedLabel.textContent = 'Speed at Full Body Weight (KPH):';
+        BWLabel.textContent = 'Full Body Weight (kg):';
+        WeightOffLabel.textContent = 'Weight Reduction (kg):';
+        speedInput.placeholder = 'e.g., 10.5';
+        BWInput.placeholder = 'e.g., 70';
+        WeightOffInput.placeholder = 'e.g., 7';
+      } else {
+        speedLabel.textContent = 'Speed at Full Body Weight (MPH):';
+        BWLabel.textContent = 'Full Body Weight (lbs):';
+        WeightOffLabel.textContent = 'Weight Reduction (lbs):';
+        speedInput.placeholder = 'e.g., 6.5';
+        BWInput.placeholder = 'e.g., 180';
+        WeightOffInput.placeholder = 'e.g., 15';
+      }
+      
       // Trigger recalculation if units change.
       calculateAdjustedSpeed();
     }
@@ -125,11 +150,23 @@
       var adjustedBW = BW - WeightOff; // BW and WeightOff are in lbs.
       var adjustedBW_kg = adjustedBW * 0.453592;
       
+      // Compute original body weight in kg for display.
+      var originalBW_kg = BW * 0.453592;
+      
+      // Compute weight reduction in kg.
+      var WeightOff_kg = WeightOff * 0.453592;
+      
+      // Compute original pace from original speed.
+      var originalPaceInMinPerMile = 60 / speedMPH;
+      var originalPaceInMinPerKm = 60 / speedKPH;
+      
       // Build verbose result text.
       var resultText = "";
+      resultText += "Original Body Weight: " + BW.toFixed(1) + " lbs (" + originalBW_kg.toFixed(1) + " kg)<br>";
       resultText += "Original Speed: " + speedMPH.toFixed(1) + " MPH (" + speedKPH.toFixed(1) + " KPH)<br>";
+      resultText += "Original Pace: " + formatPace(originalPaceInMinPerMile) + " min/mile (" + formatPace(originalPaceInMinPerKm) + " min/km)<br>";
+      resultText += "Body Weight Reduction: " + WeightOff.toFixed(1) + " lbs (" + WeightOff_kg.toFixed(1) + " kg) - " + percentReduction.toFixed(1) + "%<br>";
       resultText += "Adjusted Body Weight: " + adjustedBW.toFixed(1) + " lbs (" + adjustedBW_kg.toFixed(1) + " kg)<br>";
-      resultText += "Body Weight Reduction: " + percentReduction.toFixed(1) + " %<br>";
       resultText += "Adjusted Speed: " + adjustedSpeedMPH.toFixed(1) + " MPH (" + adjustedSpeedKPH.toFixed(1) + " KPH)<br>";
       resultText += "Adjusted Pace: " + formatPace(paceInMinPerMile) + " min/mile (" + formatPace(paceInMinPerKm) + " min/km)";
       
@@ -144,7 +181,7 @@
     
     // Initialize default values and perform an initial calculation.
     document.getElementById('speed').value = 6.2;   // Example speed at full body weight
-    document.getElementById('BW').value = 100;        // Example full body weight in lbs
+    document.getElementById('BW').value = 180;        // Example full body weight in lbs
     document.getElementById('WeightOff').value = 15;  // Example weight reduction in lbs
     updateUnits();
   </script>
