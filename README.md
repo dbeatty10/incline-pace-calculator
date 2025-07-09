@@ -32,6 +32,8 @@ Plan future workouts with incline-adjusted paces to simulate different condition
 | [Flat Pace to Hill Pace](https://dbeatty10.github.io/incline-pace-calculator/flat_to_hill.html) | Converts a flat pace into an equivalent pace at a given hill gradient. |
 | [Pace to Grade Estimator](https://dbeatty10.github.io/incline-pace-calculator/pace_to_grade.html) | Estimates the gradient of a hill based on known flat and hill paces. |
 | [Elevation to Gradient](https://dbeatty10.github.io/incline-pace-calculator/elevation_to_gradient.html) | Converts elevation gain (ft) and distance (miles) into a gradient percentage. |
+| [MPH to Pace Converter](https://dbeatty10.github.io/incline-pace-calculator/mph_to_pace.html) | Converts speed in miles per hour (MPH) to pace in minutes per mile. |
+| [KPH to Pace Converter](https://dbeatty10.github.io/incline-pace-calculator/kph_to_pace.html) | Converts speed in kilometers per hour (KPH) to pace in minutes per kilometer. |
 
 ## How to Use
 

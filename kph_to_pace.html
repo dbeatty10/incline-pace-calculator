@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>KPH to Pace Converter</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+    }
+    label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    input, button {
+      padding: 8px;
+      font-size: 1em;
+      margin-bottom: 10px;
+    }
+    #result {
+      margin-top: 20px;
+      font-weight: bold;
+    }
+    
+    /* Print styles */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        font-size: 10pt;
+      }
+      input, button, label, p {
+        display: none;
+      }
+      #result {
+        margin: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>KPH to Pace Converter</h1>
+  <p>
+    Please enter your speed in kilometers per hour (KPH) as a decimal number (e.g., 12.0 for 12.0 KPH).<br>
+    The tool will convert this to pace in minutes per kilometer format (m:ss).
+  </p>
+  
+  <label for="speedKPH">Speed (KPH):</label>
+  <input type="number" id="speedKPH" placeholder="e.g., 12.0" step="0.1" onkeydown="if(event.key==='Enter'){ calculatePace(); }">
+  
+  <button onclick="calculatePace()">Calculate Pace</button>
+  
+  <div id="result"></div>
+  
+  <script>
+    // Convert speed in KPH to pace in min/km: pace = 60 / speed
+    function kphToPace(speed) {
+      return 60 / speed;
+    }
+    
+    // Format a pace (in decimal minutes) into "m:ss" format, rounding to the nearest second.
+    function formatPace(pace) {
+      const totalSeconds = Math.round(pace * 60);
+      const minutes = Math.floor(totalSeconds / 60);
+      const seconds = totalSeconds % 60;
+      const secondsStr = seconds < 10 ? "0" + seconds : seconds;
+      return minutes + ":" + secondsStr;
+    }
+    
+    // Calculate pace from KPH input
+    function calculatePace() {
+      const speedKPH = parseFloat(document.getElementById('speedKPH').value);
+      
+      if (isNaN(speedKPH) || speedKPH <= 0) {
+        alert("Please enter a valid speed greater than 0 KPH.");
+        return;
+      }
+      
+      // Calculate pace: pace = 60 / speed
+      const pace = kphToPace(speedKPH);
+      
+      // Display the pace in "m:ss" format.
+      document.getElementById('result').innerHTML = 
+        "Pace: " + formatPace(pace) + " (min/km)";
+    }
+
+    // Get URL parameter by name.
+    function getURLParameter(name) {
+      const params = new URLSearchParams(window.location.search);
+      return params.get(name);
+    }
+
+    window.addEventListener("load", function() {
+      const speedParam = getURLParameter("speed");
+      
+      if (speedParam) {
+        document.getElementById("speedKPH").value = speedParam;
+        calculatePace();
+      }
+    });
+  </script>
+</body>
+</html>
