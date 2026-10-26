@@ -41,3 +41,7 @@ Plan future workouts with incline-adjusted paces to simulate different condition
 1. **Click a link above** to access the appropriate calculator.
 2. **Enter your data** (pace, incline, elevation, or distance).
 3. **Get instant results**—no downloads or setup required!
+
+## Formulas
+
+`hill_to_flat.html` and `flat_to_hill.html` have a "Formula" dropdown (models live in `models.js`). The default is the original Strava-style table; the others are Strava GAP (user-inferred), Minetti, Ultrapacer, The Pacing Project (reconstructed) and RE3 (reconstructed). Pick one with the `model` URL parameter, e.g. `flat_to_hill.html?flatPace=8:00&hillGradient=5&model=minetti`. To add a model, add an entry to `models.js` with `hillPace` and `flatPace` functions.
