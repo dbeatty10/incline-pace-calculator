@@ -29,7 +29,7 @@
         padding: 0;
         font-size: 10pt;
       }
-      input, button, label {
+      input, button, label, select, #modelNote {
         display: none;
       }
       #result {
@@ -51,94 +51,25 @@
   <label for="hillGradient">Hill Gradient (%):</label>
   <input type="number" id="hillGradient" placeholder="e.g., 5" onkeydown="if(event.key==='Enter'){ calculateHillPace(); }">
   
+  <label for="model">Formula:</label>
+  <select id="model" onchange="updateModelNote()"></select>
+  <div id="modelNote"></div>
+
   <button onclick="calculateHillPace()">Calculate Hill Pace</button>
   
   <div id="result"></div>
   
+  <script src="models.js"></script>
   <script>
-    // Hard-coded dictionary of empirical data (gradient => pace adjustment)
-    // All keys are strings to safely handle negative numbers.
-    const data = {
-      "35.045392399364": 3.54848473644633,
-      "32.2338445590991": 3.33040621169615,
-      "27.7642044027805": 2.96459707340553,
-      "23.7992010383043": 2.61989230847783,
-      "20.3388344656706": 2.32443108139695,
-      "17.311013714616": 2.05007422767898,
-      "14.6436478148775": 1.81089132956588,
-      "12.336736766455": 1.6209519692996,
-      "10.3181895990853": 1.48025614688013,
-      "8.58800631276845": 1.36769948894455,
-      "7.00200496697799": 1.2762472043719,
-      "5.70436750224032": 1.21293408428314,
-      "4.62300294829228": 1.15665575531535,
-      "3.61372936460744": 1.11444700858951,
-      "2.8207286917122": 1.08630784410561,
-      "2.09981898908017": 1.05816867962172,
-      "1.45100025671134": 1.03002951513783,
-      "0.946363464868917": 1.01595993289588,
-      "0.513817643289698": 1.00189035065393,
-      "0.00918085144727598": 1.00189035065393,
-      "-0.495455940395139": 0.994855559532959,
-      "-0.928001761974358": 0.987820768411985,
-      "-1.43263855381678": 0.973751186170038,
-      "-2.15354825644881": 0.952646812807117,
-      "-2.80236698881764": 0.938577230565171,
-      "-3.59536766171287": 0.924507648323223,
-      "-4.46045930487131": 0.910438066081277,
-      "-5.54182385881936": 0.89636848383933,
-      "-6.98364326408342": 0.882298901597383,
-      "-8.35337169908428": 0.875264110476409,
-      "-10.2998278961908": 0.875264110476409,
-      "-12.3183750635604": 0.889333692718356,
-      "-14.6252861119829": 0.931542439444197,
-      "-17.2926520117215": 0.994855559532959,
-      "-20.320472762776": 1.09334263522659,
-      "-23.9971122461993": 1.23403845764606,
-      "-27.7458426998859": 1.38880386230747,
-      "-32.3596647967309": 1.59984759593668,
-      "-34.9549397262062": 1.70536946275128
-    };
-
-    /**
-     * Converts a given x value (gradient) to y (pace adjustment) using:
-     *  - Linear interpolation if x_val is within the range of the hard-coded data.
-     *  - The quadratic model (a(x) = 1 + 0.029*x + 0.0015*x^2) if x_val is outside the data range.
-     *
-     * @param {number} x_val - The gradient value.
-     * @returns {number} - The interpolated or computed pace adjustment.
-     */
-    function adjustmentFactor(x_val) {
-      // Extract and sort the keys numerically.
-      const keys = Object.keys(data).map(Number).sort((a, b) => a - b);
-      const minKey = keys[0];
-      const maxKey = keys[keys.length - 1];
-
-      if (x_val >= minKey && x_val <= maxKey) {
-        // Linear interpolation within the data range.
-        for (let i = 1; i < keys.length; i++) {
-          if (x_val <= keys[i]) {
-            const x1 = keys[i - 1];
-            const x2 = keys[i];
-            const y1 = data[x1.toString()];
-            const y2 = data[x2.toString()];
-            const t = (x_val - x1) / (x2 - x1);
-            return y1 + t * (y2 - y1);
-          }
-        }
-      }
-      // If x_val is outside the range, use the quadratic model.
-      const A = 0.029;
-      const B = 0.0015;
-      return 1 + A * x_val + B * Math.pow(x_val, 2);
+    function updateModelNote() {
+      const model = PaceModels.get(document.getElementById('model').value);
+      document.getElementById('modelNote').textContent = PaceModels.describe(model);
     }
 
-    // // Empirical adjustment function: a(g) = 1 + 0.029*g + 0.0015*g^2
-    // function adjustmentFactor(g) {
-    //   return 1 + 0.029 * g + 0.0015 * Math.pow(g, 2);
-    // }
+    function selectedModel() {
+      return PaceModels.get(document.getElementById('model').value);
+    }
 
-    // Convert pace (in min/mile) to speed in MPH (if needed): speed = 60 / pace
     function paceToMPH(pace) {
       return 60 / pace;
     }
@@ -181,12 +112,23 @@
         return;
       }
       
-      // Calculate hill pace using the adjustment factor: Hill Pace = Flat Pace * a(gradient)
-      const hillPace = flatPace * adjustmentFactor(hillGradient);
+      // Calculate hill pace using the selected formula.
+      const model = selectedModel();
+      let hillPace;
+      try {
+        hillPace = model.hillPace(flatPace, hillGradient);
+      } catch (e) {
+        document.getElementById('result').textContent = "This formula could not be solved for those inputs.";
+        return;
+      }
       
       // Display the hill pace in "m:ss" format.
       document.getElementById('result').innerHTML = 
-        "Hill Pace: " + formatPace(hillPace) + " (min/mile)";
+        "Hill Pace: " + formatPace(hillPace) + " (min/mile) \u2014 " + model.label;
+      const note = PaceModels.rangeNote(model, hillGradient);
+      if (note) {
+        document.getElementById('result').innerHTML += "<br><small>" + note + "</small>";
+      }
     }
 
     function getURLParameter(name) {
@@ -197,6 +139,9 @@
 window.addEventListener("load", function() {
   const flatPaceParam = getURLParameter("flatPace");
   const hillGradientParam = getURLParameter("hillGradient");
+
+  PaceModels.populateSelect(document.getElementById("model"), getURLParameter("model"));
+  updateModelNote();
   
   if (flatPaceParam) {
     document.getElementById("flatPace").value = flatPaceParam;
